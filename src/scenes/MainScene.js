@@ -319,6 +319,7 @@ export class MainScene extends Scene {
             const bottom = this.playerController.sensors.bottom;
             const top = this.playerController.sensors.top;
             
+            const toDestroy = []
 
             for (let i = 0; i < event.pairs.length; i++)
             {
@@ -333,7 +334,7 @@ export class MainScene extends Scene {
                 }
                 const collisionObject = this.getCollisionObject(bodyA, bodyB, 'powerup')
                 if (collisionObject) {
-                    collisionObject.gameObject.destroy()
+                    toDestroy.push(collisionObject.gameObject)
                 }
                 else if ((bodyA === top && bodyB.label === 'movable') || (bodyB === top && bodyA.label === 'movable'))
                     {
@@ -378,37 +379,26 @@ export class MainScene extends Scene {
                         })
     
                         if (tweenTarget.properties != undefined && getProperty(tweenTarget, "bonus") == 'mushroom') {
-    
-                            const mushroom2 = this.matter.add.sprite(tweenTarget.gameObject.x, tweenTarget.gameObject.y, "block", 93, 
-                                {
-                                    friction: 0,
-                                    restitution: 0, // Prevent body from sticking against a wall
-                                    frictionStatic: 0,
-                                    density: 0.05,
-                                    label: 'powerup',
-                                    isStatic: true,
-                                    ignoreGravity: false
-                                 }
-                            ).setFixedRotation().setDepth(1);
-                            const mushroomBody = M.Bodies.rectangle(0, 0, 35, 30 ,{label: 'powerup'});
-                            compoundBody = M.Body.create({
-                                parts: [
-                                    mushroomBody
-                                ],
+                            const properties = {
                                 friction: 0,
                                 restitution: 0, // Prevent body from sticking against a wall
                                 frictionStatic: 0,
+                                frictionAir: 0,
                                 density: 0.05,
                                 label: 'powerup',
-                                //isStatic: true,
+                                isStatic: true,
                                 ignoreGravity: false
-
-                            });
+                             }
+                            const mushroom2 = this.matter.add.sprite(tweenTarget.gameObject.x, tweenTarget.gameObject.y, "block", 93, properties).setFixedRotation().setDepth(1);
+                            const mushroomBody = M.Bodies.rectangle(0, 0, 35, 30 , properties);
+                            properties["parts"] = [mushroomBody]
+                            compoundBody = M.Body.create(
+                                properties);
                             mushroom2.setExistingBody(compoundBody)
                                 .setPosition(tweenTarget.gameObject.x, tweenTarget.gameObject.y - 32)
                                 .setFixedRotation()
                                 .setDisplayOrigin(32.5, 49)
-                            this.matter.body.setStatic(mushroom2.body, true)
+                            //this.matter.body.setStatic(mushroom2.body, true)
                             console.log(mushroom2);
                             //setProperty(tweenTarget, 'bonus', 'none')
                             
@@ -430,9 +420,9 @@ export class MainScene extends Scene {
                                     }
                                     //mushroom2.setStatic(false)
                                     if (Phaser.Math.Between(0, 10) <= 4) {
-                                        mushroom2.setVelocityX(3)
+                                        mushroom2.setVelocityX(6)
                                     } else {
-                                        mushroom2.setVelocityX(-3)
+                                        mushroom2.setVelocityX(-6)
                                     }
                                     console.log("tween qui fait bouger le champi")
                                 },
@@ -440,7 +430,7 @@ export class MainScene extends Scene {
                                 onUpdateScope: this
                             })
 
-                            mushroom2.setStatic(false);
+                            //mushroom2.setStatic(false);
                             setProperty(tweenTarget, 'bonus', 'none');
     
                         
@@ -448,6 +438,10 @@ export class MainScene extends Scene {
                         }
                     }
             }
+            toDestroy.forEach(x => x.destroy())
+            // for (let i = 0; i < toDestroy.length; i++) {
+            //     toDestroy[i].destroy()
+            // }
         }, this)
         this.matter.world.on('collisionactive', function (event)
         {
