@@ -50,6 +50,7 @@ export class MainScene extends Scene {
 
     points = 0;
     game_over_timeout = 20;
+    objects_to_destroy = [];
 
     constructor() {
         super("MainScene");
@@ -301,6 +302,9 @@ export class MainScene extends Scene {
             this.playerController.numTouching.right = 0;
             this.playerController.numTouching.bottom = 0;
             this.playerController.numTouching.top = 0;
+            this.objects_to_destroy.forEach(x => x.destroy())
+            // https://stackoverflow.com/questions/1232040/how-do-i-empty-an-array-in-javascript
+            this.objects_to_destroy.length = 0
         }, this);
 
         // Loop over the active colliding pairs and count the surfaces the player is touching.
@@ -319,8 +323,6 @@ export class MainScene extends Scene {
             const bottom = this.playerController.sensors.bottom;
             const top = this.playerController.sensors.top;
 
-            const toDestroy = []
-
             for (let i = 0; i < event.pairs.length; i++)
             {
                 const bodyA = event.pairs[i].bodyA;
@@ -333,7 +335,7 @@ export class MainScene extends Scene {
                 }
                 const collisionObject = this.getCollisionObject(bodyA, bodyB, 'powerup')
                 if (collisionObject) {
-                    toDestroy.push(collisionObject.gameObject)
+                    this.objects_to_destroy.push(collisionObject.gameObject)
                 }
                 else if ((bodyA === top && bodyB.label === 'movable') || (bodyB === top && bodyA.label === 'movable'))
                     {
@@ -365,11 +367,11 @@ export class MainScene extends Scene {
 
                         if (getProperty(tweenTarget, "bonus") == 'mushroom') {
                             const properties = {
-                                friction: 0,
-                                restitution: 0, // Prevent body from sticking against a wall
-                                frictionStatic: 0,
-                                frictionAir: 0,
-                                density: 0.05,
+                                // friction: 0,
+                                // restitution: 0, // Prevent body from sticking against a wall
+                                // frictionStatic: 0,
+                                // frictionAir: 0,
+                                // density: 0.05,
                                 label: 'powerup',
                                 isStatic: true,
                                 ignoreGravity: false
@@ -381,7 +383,6 @@ export class MainScene extends Scene {
                             properties["parts"] = [mushroomBody]
                             compoundBody = M.Body.create(properties);
                             mushroom2.setExistingBody(compoundBody)
-                                .setFixedRotation()
                                 .setDepth(1)
                                 .setPosition(tweenTarget.gameObject.x, tweenTarget.gameObject.y - 16)
                                 .setFixedRotation()
@@ -392,25 +393,23 @@ export class MainScene extends Scene {
                             //setProperty(tweenTarget, 'bonus', 'none')
                             this.tweens.add({
                                 targets: mushroom2,
-                                y: mushroom2.y - 40,
+                                y: mushroom2.y - 32,
                                 duration: 1000,
                                 onComplete: () => {
-                                    //mushroom2.setStatic(false);
-                                    if (Phaser.Math.Between(0, 10) <= 4) {
-                                        mushroom2.setVelocityX(6);
-                                    } else {
-                                        mushroom2.setVelocityX(-6);
-                                    }
+                                    // TODO: static false make the mushroom crash the second time
+                                    // mushroom2.setStatic(false);
+                                    // mushroom2.setVelocityX(1);
+                                    // if (Phaser.Math.Between(0, 10) <= 4) {
+                                    //     mushroom2.setVelocityX(6);
+                                    // } else {
+                                    //     mushroom2.setVelocityX(-6);
+                                    // }
                                 }
                             });
-                            setProperty(tweenTarget, 'bonus', 'none');
+                            //setProperty(tweenTarget, 'bonus', 'none');
                         }
                     }
             }
-            toDestroy.forEach(x => x.destroy())
-            // for (let i = 0; i < toDestroy.length; i++) {
-            //     toDestroy[i].destroy()
-            // }
         }, this)
         this.matter.world.on('collisionactive', function (event)
         {
