@@ -329,7 +329,6 @@ export class MainScene extends Scene {
 
                 if (bodyA === playerBody || bodyB === playerBody)
                 {
-
                     continue;
                 }
                 const collisionObject = this.getCollisionObject(bodyA, bodyB, 'powerup')
@@ -362,7 +361,7 @@ export class MainScene extends Scene {
                             onComplete: () => {
                                 tweenTarget.label = "movable";
                             }
-                        })
+                        });
 
                         if (getProperty(tweenTarget, "bonus") == 'mushroom') {
                             const properties = {
@@ -374,7 +373,7 @@ export class MainScene extends Scene {
                                 label: 'powerup',
                                 isStatic: true,
                                 ignoreGravity: false
-                            }
+                            };
 
                             const mushroom2 = this.matter.add.sprite(tweenTarget.gameObject.x, tweenTarget.gameObject.y, "block", 93, properties);
 
@@ -384,47 +383,27 @@ export class MainScene extends Scene {
                             mushroom2.setExistingBody(compoundBody)
                                 .setFixedRotation()
                                 .setDepth(1)
-                                .setPosition(tweenTarget.gameObject.x, tweenTarget.gameObject.y - 32)
+                                .setPosition(tweenTarget.gameObject.x, tweenTarget.gameObject.y - 16)
                                 .setFixedRotation()
                                 .setDisplayOrigin(32.5, 49);
 
                                 //this.matter.body.setStatic(mushroom2.body, true)
                             console.log(mushroom2);
                             //setProperty(tweenTarget, 'bonus', 'none')
-
-                            tween.add({
-                                targets: [mushroom2],
-                                duration: 2000,
-                                start: performance.now(),
-                                y: mushroom2.y,
-                                onUpdate: (t, target) => {
-                                    const y = target.y - 64 / 30000
-                                    //const dy = y - target.gameObject.y
-                                    target.y = y
-                                },
-                                onComplete: (t, target) => {
-                                    console.log("tween champi qu sort de la boîte")
-                                    if (!mushroom2) {
-
-                                        return;
-                                    }
-                                    //mushroom2.setStatic(false)
+                            this.tweens.add({
+                                targets: mushroom2,
+                                y: mushroom2.y - 40,
+                                duration: 1000,
+                                onComplete: () => {
+                                    //mushroom2.setStatic(false);
                                     if (Phaser.Math.Between(0, 10) <= 4) {
-                                        mushroom2.setVelocityX(6)
+                                        mushroom2.setVelocityX(6);
                                     } else {
-                                        mushroom2.setVelocityX(-6)
+                                        mushroom2.setVelocityX(-6);
                                     }
-                                    console.log("tween qui fait bouger le champi")
-                                },
-                                onCompleteScope: this,
-                                onUpdateScope: this
-                            })
-
-                            //mushroom2.setStatic(false);
-                            //setProperty(tweenTarget, 'bonus', 'none');
-
-
-
+                                }
+                            });
+                            setProperty(tweenTarget, 'bonus', 'none');
                         }
                     }
             }
