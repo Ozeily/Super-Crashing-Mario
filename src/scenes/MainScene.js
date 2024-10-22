@@ -3,7 +3,7 @@ import { Player } from "../gameobjects/Player";
 import { BlueEnemy } from "../gameobjects/BlueEnemy";
 
 // function getObject(object, flyingBlocksLayer) {
-                            
+
 //     for (let i = 0; i < flyingBlocksLayer.objects.length; ++i) {
 //         let obj = flyingBlocksLayer.objects[i];
 
@@ -65,7 +65,7 @@ export class MainScene extends Scene {
     // }
 
     create() {
-        
+
         //this.add.image(0, 0, "background")
         //    .setOrigin(0, 0);
         //const ground = this.add.image(0, 0, "floor", null, { restitution: 0.4, isStatic: true }).setOrigin(0, 1);
@@ -126,7 +126,7 @@ export class MainScene extends Scene {
             }
         });
 
-        
+
         flyingBlocksLayer.objects.forEach(tile => {
             if (tile.type == "mystery block") {
                 var mystery_block = this.matter.add.sprite(tile.x + 32, tile.y - 32, "block", 83, {label: 'movable', properties: tile.properties, ignoreGravity: true, isStatic: true}).setFixedRotation().setDepth(3);
@@ -140,8 +140,8 @@ export class MainScene extends Scene {
 
         const playerSpawnPoint = map.findObject("spawn", obj => obj.name === "playerSpawn");
         const mushroom = this.matter.add.sprite(playerSpawnPoint.x + 200, playerSpawnPoint.y - 64, "block", 93, {label: 'powerup', isStatic: false, ignoreGravity: false}).setFixedRotation();
-        
-        
+
+
 
         // for (let obj in spawnLayer)
         // {
@@ -159,7 +159,7 @@ export class MainScene extends Scene {
         // Enemy
         //this.enemy_blue = new BlueEnemy(this);
 
-        // Cursor keys 
+        // Cursor keys
         this.cursors = this.input.keyboard.createCursorKeys();
         // this.cursors.space.on("down", () => {
         //     this.player.move("up");
@@ -234,10 +234,10 @@ export class MainScene extends Scene {
             .setFixedRotation() // Sets max inertia to prevent rotation
             //.setPosition(160, 704);
             .setPosition(playerSpawnPoint.x, playerSpawnPoint.y);
-        
+
         w = mushroom.width;
         h = mushroom.height;
-    
+
         // The mushroom's body is going to be a compound body.
         const mushroomBody = M.Bodies.rectangle(0, 0, 35, 30 ,{label: 'powerup'});
         compoundBody = M.Body.create({
@@ -247,7 +247,7 @@ export class MainScene extends Scene {
             friction: 0.01,
             restitution: 0.05 // Prevent body from sticking against a wall
         });
-    
+
         mushroom.setExistingBody(compoundBody).setPosition(playerSpawnPoint.x + 50, playerSpawnPoint.y - 164).setFixedRotation().setDisplayOrigin(32.5, 49);
         //console.log(mushroom, mushroomBody);
         this.cam = this.cameras.main;
@@ -304,7 +304,7 @@ export class MainScene extends Scene {
         }, this);
 
         // Loop over the active colliding pairs and count the surfaces the player is touching.
-        
+
         this.matter.world.on('collisionstart', function (event)
         {
             //console.log("haha")
@@ -318,7 +318,7 @@ export class MainScene extends Scene {
             const right = this.playerController.sensors.right;
             const bottom = this.playerController.sensors.bottom;
             const top = this.playerController.sensors.top;
-            
+
             const toDestroy = []
 
             for (let i = 0; i < event.pairs.length; i++)
@@ -328,8 +328,8 @@ export class MainScene extends Scene {
                 var this_ = this;
 
                 if (bodyA === playerBody || bodyB === playerBody)
-                {   
-                    
+                {
+
                     continue;
                 }
                 const collisionObject = this.getCollisionObject(bodyA, bodyB, 'powerup')
@@ -338,14 +338,15 @@ export class MainScene extends Scene {
                 }
                 else if ((bodyA === top && bodyB.label === 'movable') || (bodyB === top && bodyA.label === 'movable'))
                     {
-                        
+
                         var tweenTarget = (bodyA.label === "movable" ? bodyA : bodyB);
                         //let mystery_box = getObject(tweenTarget, flyingBlocksLayer);
                         var tween = this.tweens;
                         const target_startY = tweenTarget.position.y
-    
+
                         block_bump.play();
-                        
+                        tweenTarget.label = "moving";
+
                         //animation mistery block
                         tween.add({
                             targets: [tweenTarget],
@@ -365,20 +366,21 @@ export class MainScene extends Scene {
                                     start: performance.now(),
                                     y: tweenTarget.position.y + 128,
                                     onUpdate: (t, target) => {
-                                        const y = target.gameObject.y + 128 / 100
-                                        target.gameObject.y = y
+                                        const y = target.gameObject.y + 128 / 100;
+                                        target.gameObject.y = y;
                                     },
                                     onComplete: (t2, target2) => {
-                                        tweenTarget.position.y = target_startY
-    
+                                        tweenTarget.position.y = target_startY;
+                                        tweenTarget.label = "movable";
+
                                     }
                                 });
                             },
                             onCompleteScope: this,
                             onUpdateScope: this
                         })
-    
-                        if (tweenTarget.properties != undefined && getProperty(tweenTarget, "bonus") == 'mushroom') {
+
+                        if (getProperty(tweenTarget, "bonus") == 'mushroom') {
                             const properties = {
                                 friction: 0,
                                 restitution: 0, // Prevent body from sticking against a wall
@@ -401,7 +403,7 @@ export class MainScene extends Scene {
                             //this.matter.body.setStatic(mushroom2.body, true)
                             console.log(mushroom2);
                             //setProperty(tweenTarget, 'bonus', 'none')
-                            
+
                             tween.add({
                                 targets: [mushroom2],
                                 duration: 1000,
@@ -415,7 +417,7 @@ export class MainScene extends Scene {
                                 onComplete: (t, target) => {
                                     console.log("tween champi qu sort de la boîte")
                                     if (!mushroom2) {
-                                    
+
                                         return;
                                     }
                                     //mushroom2.setStatic(false)
@@ -432,9 +434,9 @@ export class MainScene extends Scene {
 
                             //mushroom2.setStatic(false);
                             setProperty(tweenTarget, 'bonus', 'none');
-    
-                        
-                            
+
+
+
                         }
                     }
             }
@@ -451,7 +453,7 @@ export class MainScene extends Scene {
             const right = this.playerController.sensors.right;
             const bottom = this.playerController.sensors.bottom;
             const top = this.playerController.sensors.top;
-            
+
 
             for (let i = 0; i < event.pairs.length; i++)
             {
@@ -460,8 +462,8 @@ export class MainScene extends Scene {
                 var this_ = this;
 
                 if (bodyA === playerBody || bodyB === playerBody)
-                {   
-                    
+                {
+
                     continue;
                 }
                 //dangerousTile => mario ne change pas d'anim lorsqu'il touche une tile dangereuse
@@ -491,8 +493,8 @@ export class MainScene extends Scene {
                 {
                     this.playerController.numTouching.right += 1;
                 }
-                
-                
+
+
 
 
 
@@ -503,21 +505,21 @@ export class MainScene extends Scene {
                     //     start: performance.now(),
                     //     yoyo: true,
                     // })
-                    
-                
+
+
 
                 // if ((bodyB.label === 'powerup') || (bodyA.label === 'powerup')) {
-                    
+
                 //     var powerup = (bodyA.label === "powerup" ? bodyA : bodyB);
                 //     console.log(powerup)
 
                 //     powerup.destroy()
                 // }
-                
-                
 
 
-                
+
+
+
             }
         }, this);
 
@@ -609,7 +611,7 @@ export class MainScene extends Scene {
         // this.enemy_blue.update();
 
         // // Player movement entries
-        
+
         // if (this.cursors.down.isDown) {
         //     this.player.move("down");
         // }
@@ -676,7 +678,7 @@ export class MainScene extends Scene {
         else if (this.playerController.blocked.bottom)
         {
             this.smoothedControls.reset();
-            
+
             if (matterSprite.frame.name < 10)
                 {
                     matterSprite.anims.play('idle-right', true);
@@ -707,7 +709,7 @@ export class MainScene extends Scene {
         const canJump = (time - this.playerController.lastJumpedAt) > 250;
         if (this.cursors.up.isDown & canJump)
         {
-            
+
             if (this.playerController.blocked.bottom || this.playerController.blocked.left || this.playerController.blocked.right) {
                 this.jump_sound.play(); //empêcher de jouer le son plusieurs fois
                 //console.log(this.jump_sound);
