@@ -346,38 +346,22 @@ export class MainScene extends Scene {
 
                         block_bump.play();
                         tweenTarget.label = "moving";
-
-                        //animation mistery block
-                        tween.add({
-                            targets: [tweenTarget],
-                            duration: 75,
-                            start: performance.now(),
-                            y: target_startY - 64,
-                            //yoyo: true,
-                            onUpdate: (t, target) => {
-                                const y = target.gameObject.y - 64 / 100
-                                //const dy = y - target.gameObject.y
-                                target.gameObject.y = y
-                            },
-                            onComplete: (t, target) => {
-                                tween.add({
-                                    targets: [tweenTarget],
-                                    duration: 75,
-                                    start: performance.now(),
-                                    y: tweenTarget.position.y + 128,
-                                    onUpdate: (t, target) => {
-                                        const y = target.gameObject.y + 128 / 100;
-                                        target.gameObject.y = y;
-                                    },
-                                    onComplete: (t2, target2) => {
-                                        tweenTarget.position.y = target_startY;
-                                        tweenTarget.label = "movable";
-
-                                    }
-                                });
-                            },
-                            onCompleteScope: this,
-                            onUpdateScope: this
+                        // https://labs.phaser.io/edit.html?src=src\tweens\chains\basic%20tween%20chain.js
+                        this.tweens.chain({
+                            targets: tweenTarget.gameObject,
+                            tweens: [
+                                {
+                                    y: tweenTarget.position.y - 24,
+                                    duration: 75
+                                },
+                                {
+                                    y: tweenTarget.position.y,
+                                    duration: 75
+                                }
+                            ],
+                            onComplete: () => {
+                                tweenTarget.label = "movable";
+                            }
                         })
 
                         if (getProperty(tweenTarget, "bonus") == 'mushroom') {
@@ -390,27 +374,31 @@ export class MainScene extends Scene {
                                 label: 'powerup',
                                 isStatic: true,
                                 ignoreGravity: false
-                             }
-                            const mushroom2 = this.matter.add.sprite(tweenTarget.gameObject.x, tweenTarget.gameObject.y, "block", 93, properties).setFixedRotation().setDepth(1);
+                            }
+
+                            const mushroom2 = this.matter.add.sprite(tweenTarget.gameObject.x, tweenTarget.gameObject.y, "block", 93, properties);
+
                             const mushroomBody = M.Bodies.rectangle(0, 0, 35, 30 , properties);
                             properties["parts"] = [mushroomBody]
-                            compoundBody = M.Body.create(
-                                properties);
+                            compoundBody = M.Body.create(properties);
                             mushroom2.setExistingBody(compoundBody)
+                                .setFixedRotation()
+                                .setDepth(1)
                                 .setPosition(tweenTarget.gameObject.x, tweenTarget.gameObject.y - 32)
                                 .setFixedRotation()
-                                .setDisplayOrigin(32.5, 49)
-                            //this.matter.body.setStatic(mushroom2.body, true)
+                                .setDisplayOrigin(32.5, 49);
+
+                                //this.matter.body.setStatic(mushroom2.body, true)
                             console.log(mushroom2);
                             //setProperty(tweenTarget, 'bonus', 'none')
 
                             tween.add({
                                 targets: [mushroom2],
-                                duration: 1000,
+                                duration: 2000,
                                 start: performance.now(),
                                 y: mushroom2.y,
                                 onUpdate: (t, target) => {
-                                    const y = target.y - 64 / 3000
+                                    const y = target.y - 64 / 30000
                                     //const dy = y - target.gameObject.y
                                     target.y = y
                                 },
@@ -433,7 +421,7 @@ export class MainScene extends Scene {
                             })
 
                             //mushroom2.setStatic(false);
-                            setProperty(tweenTarget, 'bonus', 'none');
+                            //setProperty(tweenTarget, 'bonus', 'none');
 
 
 
