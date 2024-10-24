@@ -196,8 +196,8 @@ export class MainScene extends Scene {
             },
             lastJumpedAt: 0,
             speed: {
-                run: 7,
-                jump: 10
+                run: 4,
+                jump: 9
             }
         };
 
@@ -226,7 +226,11 @@ export class MainScene extends Scene {
                 playerBody, this.playerController.sensors.bottom, this.playerController.sensors.left,
                 this.playerController.sensors.right, this.playerController.sensors.top
             ],
-            friction: 0.01,
+            density: 0,
+            mass: 0,
+            friction: 0.0012,
+            frictionAir: 0.015,
+            frictionStatic: 0,
             restitution: 0.05 // Prevent body from sticking against a wall
         });
 
@@ -335,15 +339,15 @@ export class MainScene extends Scene {
                 }
                 const collisionObject = this.getCollisionObject(bodyA, bodyB, 'powerup')
                 if (collisionObject) {
-                    this.objects_to_destroy.push(collisionObject.gameObject)
+                    console.log("will be destroyed " + collisionObject);
+                    this.objects_to_destroy.push(collisionObject.gameObject);
                 }
                 else if ((bodyA === top && bodyB.label === 'movable') || (bodyB === top && bodyA.label === 'movable'))
                     {
 
                         var tweenTarget = (bodyA.label === "movable" ? bodyA : bodyB);
                         //let mystery_box = getObject(tweenTarget, flyingBlocksLayer);
-                        var tween = this.tweens;
-                        const target_startY = tweenTarget.position.y
+                        //console.log(tweenTarget)
 
                         block_bump.play();
                         tweenTarget.label = "moving";
@@ -379,7 +383,7 @@ export class MainScene extends Scene {
 
                             const mushroom2 = this.matter.add.sprite(tweenTarget.gameObject.x, tweenTarget.gameObject.y, "block", 93, properties);
 
-                            const mushroomBody = M.Bodies.rectangle(0, 0, 35, 30 , properties);
+                            const mushroomBody = M.Bodies.rectangle(0, 0, 35, 30, properties);
                             properties["parts"] = [mushroomBody]
                             compoundBody = M.Body.create(properties);
                             mushroom2.setExistingBody(compoundBody)
@@ -394,7 +398,7 @@ export class MainScene extends Scene {
                             this.tweens.add({
                                 targets: mushroom2,
                                 y: mushroom2.y - 32,
-                                duration: 1000,
+                                duration: 300,
                                 onComplete: () => {
                                     // TODO: static false make the mushroom crash the second time
                                     // mushroom2.setStatic(false);
