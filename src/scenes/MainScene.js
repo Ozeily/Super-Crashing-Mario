@@ -51,6 +51,7 @@ export class MainScene extends Scene {
     points = 0;
     game_over_timeout = 20;
     objects_to_destroy = [];
+    powerupConfig;
 
     constructor() {
         super("MainScene");
@@ -67,6 +68,9 @@ export class MainScene extends Scene {
 
     create() {
 
+        this.powerupConfig = {
+            velocity: 2
+        }
         //this.add.image(0, 0, "background")
         //    .setOrigin(0, 0);
         //const ground = this.add.image(0, 0, "floor", null, { restitution: 0.4, isStatic: true }).setOrigin(0, 1);
@@ -124,6 +128,8 @@ export class MainScene extends Scene {
             {
                 tile.physics.matterBody.body.label = 'button';
                 //console.log("buttons");
+            } else if (tile.physics.matterBody && tile.physics.matterBody.body) {
+                tile.physics.matterBody.body.label = 'ground';
             }
         });
 
@@ -228,7 +234,7 @@ export class MainScene extends Scene {
             ],
             density: 0,
             mass: 0,
-            friction: 0.0012,
+            friction: 0.0014,
             frictionAir: 0.015,
             frictionStatic: 0,
             restitution: 0.05 // Prevent body from sticking against a wall
@@ -339,7 +345,7 @@ export class MainScene extends Scene {
                 }
                 const collisionObject = this.getCollisionObject(bodyA, bodyB, 'powerup')
                 if (collisionObject) {
-                    console.log("will be destroyed " + collisionObject);
+                    console.log("will be destroyed ", collisionObject);
                     this.objects_to_destroy.push(collisionObject.gameObject);
                 }
                 else if ((bodyA === top && bodyB.label === 'movable') || (bodyB === top && bodyA.label === 'movable'))
@@ -347,7 +353,6 @@ export class MainScene extends Scene {
 
                         var tweenTarget = (bodyA.label === "movable" ? bodyA : bodyB);
                         //let mystery_box = getObject(tweenTarget, flyingBlocksLayer);
-                        //console.log(tweenTarget)
 
                         block_bump.play();
                         tweenTarget.label = "moving";
@@ -371,13 +376,13 @@ export class MainScene extends Scene {
 
                         if (getProperty(tweenTarget, "bonus") == 'mushroom') {
                             const properties = {
-                                // friction: 0,
-                                // restitution: 0, // Prevent body from sticking against a wall
-                                // frictionStatic: 0,
-                                // frictionAir: 0,
+                                friction: 0,
+                                restitution: 0.1, // Prevent body from sticking against a wall
+                                frictionStatic: 0,
+                                frictionAir: 0,
                                 // density: 0.05,
                                 label: 'powerup',
-                                isStatic: true,
+                                //isStatic: true,
                                 ignoreGravity: false
                             };
 
@@ -393,7 +398,7 @@ export class MainScene extends Scene {
                                 .setDisplayOrigin(32.5, 49);
 
                                 //this.matter.body.setStatic(mushroom2.body, true)
-                            console.log(mushroom2);
+                            // console.log(mushroom2);
                             //setProperty(tweenTarget, 'bonus', 'none')
                             this.tweens.add({
                                 targets: mushroom2,
@@ -401,8 +406,8 @@ export class MainScene extends Scene {
                                 duration: 300,
                                 onComplete: () => {
                                     // TODO: static false make the mushroom crash the second time
-                                    // mushroom2.setStatic(false);
-                                    // mushroom2.setVelocityX(1);
+                                    //mushroom2.setStatic(false);
+                                    mushroom2.setVelocityX(this.powerupConfig.velocity);
                                     // if (Phaser.Math.Between(0, 10) <= 4) {
                                     //     mushroom2.setVelocityX(6);
                                     // } else {
@@ -418,23 +423,26 @@ export class MainScene extends Scene {
         this.matter.world.on('collisionactive', function (event)
         {
             const playerBody = this.playerController.body;
-            const mushroom = this.mushroomBody;
             const left = this.playerController.sensors.left;
             const right = this.playerController.sensors.right;
             const bottom = this.playerController.sensors.bottom;
             const top = this.playerController.sensors.top;
 
-
-            for (let i = 0; i < event.pairs.length; i++)
-            {
+            for (let i = 0; i < event.pairs.length; i++) {
                 const bodyA = event.pairs[i].bodyA;
                 const bodyB = event.pairs[i].bodyB;
                 var this_ = this;
 
-                if (bodyA === playerBody || bodyB === playerBody)
-                {
-
+                if (bodyA === playerBody || bodyB === playerBody) {
                     continue;
+                }
+                else if (bodyA.label == 'powerup' || bodyB.label == 'powerup') {
+                    let other = bodyA.label != 'powerup' ? bodyA : bodyB;
+                    if (['ground', 'movable', 'Rectangle Body'].includes(other.label)) {
+                        continue;
+                    }
+                    let powerup = bodyA.label == 'powerup' ? bodyA.gameObject : bodyB.gameObject;
+                    powerup.setVelocityX(this.powerupConfig.velocity * -Math.sign(powerup.getVelocity().x));
                 }
                 //dangerousTile => mario ne change pas d'anim lorsqu'il touche une tile dangereuse
                 // else if (bodyA.label === 'dangerousTile'|| bodyB.label === 'dangerousTile')
@@ -444,8 +452,7 @@ export class MainScene extends Scene {
                 //         mario_death.play();
                 //         mario_death.on('complete', function() {this_.scene.start("GameOverScene", { points: this_.points })});
                 //     }
-                else if (bodyA === bottom || bodyB === bottom)
-                {
+                else if (bodyA === bottom || bodyB === bottom) {
                     // Standing on any surface counts (e.g. jumping off of a non-static crate).
                     this.playerController.numTouching.bottom += 1;
                     // if (bodyA.label === 'button' || bodyB.label === 'button')
@@ -453,43 +460,14 @@ export class MainScene extends Scene {
                     //         console.log(bodyA.label === "button" ? bodyA : bodyB);
                     //     }
                 }
-                else if ((bodyA === left && bodyB.isStatic) || (bodyB === left && bodyA.isStatic))
-                {
+                else if ((bodyA === left && bodyB.isStatic) || (bodyB === left && bodyA.isStatic)) {
                     // Only static objects count since we don't want to be blocked by an object that we
                     // can push around.
                     this.playerController.numTouching.left += 1;
                 }
-                else if ((bodyA === right && bodyB.isStatic) || (bodyB === right && bodyA.isStatic))
-                {
+                else if ((bodyA === right && bodyB.isStatic) || (bodyB === right && bodyA.isStatic)) {
                     this.playerController.numTouching.right += 1;
                 }
-
-
-
-
-
-                    // tween.add({
-                    //     targets: tweenTarget,
-                    //     y: tweenTarget.position.y - 2000,
-                    //     duration: 100,
-                    //     start: performance.now(),
-                    //     yoyo: true,
-                    // })
-
-
-
-                // if ((bodyB.label === 'powerup') || (bodyA.label === 'powerup')) {
-
-                //     var powerup = (bodyA.label === "powerup" ? bodyA : bodyB);
-                //     console.log(powerup)
-
-                //     powerup.destroy()
-                // }
-
-
-
-
-
             }
         }, this);
 
@@ -573,7 +551,7 @@ export class MainScene extends Scene {
         if ((bodyA === right && bodyB.label === label) || (bodyB === right && bodyA.label === label)) {
             return (bodyA.label === label ? bodyA : bodyB);
         }
-        return false
+        return undefined;
     }
 
     update(time, delta) {
