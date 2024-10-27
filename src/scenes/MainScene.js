@@ -202,8 +202,8 @@ export class MainScene extends Scene {
             },
             lastJumpedAt: 0,
             speed: {
-                run: 4,
-                jump: 9
+                run: 7,
+                jump: 14
             }
         };
 
