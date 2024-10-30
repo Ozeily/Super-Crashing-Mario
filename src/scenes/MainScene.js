@@ -1,6 +1,7 @@
 import { Scene } from "phaser";
 import { Player } from "../gameobjects/Player";
 import { BlueEnemy } from "../gameobjects/BlueEnemy";
+import { Mushroom } from "../gameobjects/Mushroom";
 
 // function getObject(object, flyingBlocksLayer) {
 
@@ -146,8 +147,9 @@ export class MainScene extends Scene {
         });
 
         const playerSpawnPoint = map.findObject("spawn", obj => obj.name === "playerSpawn");
-        const mushroom = this.matter.add.sprite(playerSpawnPoint.x + 200, playerSpawnPoint.y - 64, "block", 93, {label: 'powerup', isStatic: false, ignoreGravity: false}).setFixedRotation();
-
+        //const mushroom = this.matter.add.sprite(playerSpawnPoint.x + 200, playerSpawnPoint.y - 64, "block", 93, {label: 'powerup', isStatic: false, ignoreGravity: false}).setFixedRotation();
+        const mushroom = new Mushroom(this, playerSpawnPoint.x, playerSpawnPoint.y, "block", 93, {label: 'powerup', isStatic: false, ignoreGravity: false});
+        console.log(mushroom);
 
 
         // for (let obj in spawnLayer)
@@ -246,21 +248,7 @@ export class MainScene extends Scene {
             //.setPosition(160, 704);
             .setPosition(playerSpawnPoint.x, playerSpawnPoint.y);
 
-        w = mushroom.width;
-        h = mushroom.height;
-
-        // The mushroom's body is going to be a compound body.
-        const mushroomBody = M.Bodies.rectangle(0, 0, 35, 30 ,{label: 'powerup'});
-        compoundBody = M.Body.create({
-            parts: [
-                mushroomBody
-            ],
-            friction: 0.01,
-            restitution: 0.05 // Prevent body from sticking against a wall
-        });
-
-        mushroom.setExistingBody(compoundBody).setPosition(playerSpawnPoint.x + 50, playerSpawnPoint.y - 164).setFixedRotation().setDisplayOrigin(32.5, 49);
-        //console.log(mushroom, mushroomBody);
+    
         this.cam = this.cameras.main;
         this.cam.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
         this.smoothMoveCameraTowards(this.playerController.matterSprite);

@@ -11,6 +11,7 @@
     "vite": "^5.1.6"
   },
   "dependencies": {
-    "phaser": "^3.80.1"
+    "phaser": "^3.80.1",
+    "phaser-matter-collision-plugin": "^1.0.0"
   }
 }
