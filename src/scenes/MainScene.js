@@ -123,18 +123,22 @@ export class MainScene extends Scene {
             if (tile.properties.kills)
             {
                 tile.physics.matterBody.body.label = 'dangerousTile';
+                tile.properties.label = 'dangerousTile';
                 //console.log("blocks that kill");
             }
             else if (tile.properties.canBePressed)
             {
                 tile.physics.matterBody.body.label = 'button';
+                tile.properties.label = 'button';
                 //console.log("buttons");
             } else if (tile.physics.matterBody && tile.physics.matterBody.body) {
                 tile.physics.matterBody.body.label = 'ground';
+                tile.properties.label = 'ground';
             }
         });
 
 
+        // TODO BLOCK: create a class for block. Also check the code just above.
         flyingBlocksLayer.objects.forEach(tile => {
             if (tile.type == "mystery block") {
                 var mystery_block = this.matter.add.sprite(tile.x + 32, tile.y - 32, "block", 83, {label: 'movable', properties: tile.properties, ignoreGravity: true, isStatic: true}).setFixedRotation().setDepth(3);
@@ -147,9 +151,7 @@ export class MainScene extends Scene {
         });
 
         const playerSpawnPoint = map.findObject("spawn", obj => obj.name === "playerSpawn");
-        //const mushroom = this.matter.add.sprite(playerSpawnPoint.x + 200, playerSpawnPoint.y - 64, "block", 93, {label: 'powerup', isStatic: false, ignoreGravity: false}).setFixedRotation();
-        const mushroom = new Mushroom(this, playerSpawnPoint.x, playerSpawnPoint.y, "block", 93, {label: 'powerup', isStatic: false, ignoreGravity: false});
-        console.log(mushroom);
+        new Mushroom(this, playerSpawnPoint.x + 200, playerSpawnPoint.y - 64, "block", 93, {label: 'powerup', isStatic: false, ignoreGravity: false});
 
 
         // for (let obj in spawnLayer)
@@ -180,6 +182,7 @@ export class MainScene extends Scene {
         //     this.player.fire(pointer.x, pointer.y);
         // });
 
+        // TODO PLAYER: create a class for the player
         // The player is a collection of bodies and sensors
         this.playerController = {
             matterSprite: this.matter.add.sprite(0, 0, 'player', 4),
@@ -234,6 +237,7 @@ export class MainScene extends Scene {
                 playerBody, this.playerController.sensors.bottom, this.playerController.sensors.left,
                 this.playerController.sensors.right, this.playerController.sensors.top
             ],
+            label: 'player',
             density: 0,
             mass: 0,
             friction: 0.0014,
@@ -248,7 +252,7 @@ export class MainScene extends Scene {
             //.setPosition(160, 704);
             .setPosition(playerSpawnPoint.x, playerSpawnPoint.y);
 
-    
+
         this.cam = this.cameras.main;
         this.cam.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
         this.smoothMoveCameraTowards(this.playerController.matterSprite);
@@ -294,6 +298,7 @@ export class MainScene extends Scene {
         // Use matter events to detect whether the player is touching a surface to the left, right or
         // bottom.
 
+        // TODO PLAYER: move this code in the class. check the example if there is a 'beforeUpdate' function
         // Before matter's update, reset the player's count of what surfaces it is touching.
         this.matter.world.on('beforeupdate', function (event) {
             this.playerController.numTouching.left = 0;
@@ -315,7 +320,6 @@ export class MainScene extends Scene {
                 return
             }
             const playerBody = this.playerController.body;
-            const mushroom = this.mushroomBody;
             const left = this.playerController.sensors.left;
             const right = this.playerController.sensors.right;
             const bottom = this.playerController.sensors.bottom;
@@ -331,12 +335,13 @@ export class MainScene extends Scene {
                 {
                     continue;
                 }
-                const collisionObject = this.getCollisionObject(bodyA, bodyB, 'powerup')
-                if (collisionObject) {
-                    console.log("will be destroyed ", collisionObject);
-                    this.objects_to_destroy.push(collisionObject.gameObject);
-                }
-                else if ((bodyA === top && bodyB.label === 'movable') || (bodyB === top && bodyA.label === 'movable'))
+                // const collisionObject = this.getCollisionObject(bodyA, bodyB, 'powerup')
+                // if (collisionObject) {
+                //     console.log("will be destroyed ", collisionObject);
+                //     this.objects_to_destroy.push(collisionObject.gameObject);
+                // }
+                // TODO PLAYER: move this code to a function in the class, to interact with a block
+                if ((bodyA === top && bodyB.label === 'movable') || (bodyB === top && bodyA.label === 'movable'))
                     {
 
                         var tweenTarget = (bodyA.label === "movable" ? bodyA : bodyB);
@@ -362,52 +367,15 @@ export class MainScene extends Scene {
                             }
                         });
 
+                        // TODO BLOCK: getProperty should be in the class
                         if (getProperty(tweenTarget, "bonus") == 'mushroom') {
-                            const properties = {
-                                friction: 0,
-                                restitution: 0.1, // Prevent body from sticking against a wall
-                                frictionStatic: 0,
-                                frictionAir: 0,
-                                // density: 0.05,
-                                label: 'powerup',
-                                //isStatic: true,
-                                ignoreGravity: false
-                            };
-
-                            const mushroom2 = this.matter.add.sprite(tweenTarget.gameObject.x, tweenTarget.gameObject.y, "block", 93, properties);
-
-                            const mushroomBody = M.Bodies.rectangle(0, 0, 35, 30, properties);
-                            properties["parts"] = [mushroomBody]
-                            compoundBody = M.Body.create(properties);
-                            mushroom2.setExistingBody(compoundBody)
-                                .setDepth(1)
-                                .setPosition(tweenTarget.gameObject.x, tweenTarget.gameObject.y - 16)
-                                .setFixedRotation()
-                                .setDisplayOrigin(32.5, 49);
-
-                                //this.matter.body.setStatic(mushroom2.body, true)
-                            // console.log(mushroom2);
-                            //setProperty(tweenTarget, 'bonus', 'none')
-                            this.tweens.add({
-                                targets: mushroom2,
-                                y: mushroom2.y - 32,
-                                duration: 300,
-                                onComplete: () => {
-                                    // TODO: static false make the mushroom crash the second time
-                                    //mushroom2.setStatic(false);
-                                    mushroom2.setVelocityX(this.powerupConfig.velocity);
-                                    // if (Phaser.Math.Between(0, 10) <= 4) {
-                                    //     mushroom2.setVelocityX(6);
-                                    // } else {
-                                    //     mushroom2.setVelocityX(-6);
-                                    // }
-                                }
-                            });
+                            new Mushroom(this, tweenTarget.gameObject.x, tweenTarget.gameObject.y - 16);
                             //setProperty(tweenTarget, 'bonus', 'none');
                         }
                     }
             }
         }, this)
+        // TODO PLAYER: a lot of code to move here
         this.matter.world.on('collisionactive', function (event)
         {
             const playerBody = this.playerController.body;
@@ -424,14 +392,14 @@ export class MainScene extends Scene {
                 if (bodyA === playerBody || bodyB === playerBody) {
                     continue;
                 }
-                else if (bodyA.label == 'powerup' || bodyB.label == 'powerup') {
-                    let other = bodyA.label != 'powerup' ? bodyA : bodyB;
-                    if (['ground', 'movable', 'Rectangle Body'].includes(other.label)) {
-                        continue;
-                    }
-                    let powerup = bodyA.label == 'powerup' ? bodyA.gameObject : bodyB.gameObject;
-                    powerup.setVelocityX(this.powerupConfig.velocity * -Math.sign(powerup.getVelocity().x));
-                }
+                // else if (bodyA.label == 'powerup' || bodyB.label == 'powerup') {
+                //     let other = bodyA.label != 'powerup' ? bodyA : bodyB;
+                //     if (['ground', 'movable', 'Rectangle Body'].includes(other.label)) {
+                //         continue;
+                //     }
+                //     let powerup = bodyA.label == 'powerup' ? bodyA.gameObject : bodyB.gameObject;
+                //     powerup.setVelocityX(this.powerupConfig.velocity * -Math.sign(powerup.getVelocity().x));
+                // }
                 //dangerousTile => mario ne change pas d'anim lorsqu'il touche une tile dangereuse
                 // else if (bodyA.label === 'dangerousTile'|| bodyB.label === 'dangerousTile')
                 //     {
