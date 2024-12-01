@@ -2,6 +2,7 @@ import { Scene } from "phaser";
 import { Player } from "../gameobjects/Player";
 import { BlueEnemy } from "../gameobjects/BlueEnemy";
 import { Mushroom } from "../gameobjects/Mushroom";
+import { Block } from "../gameobjects/Block";
 
 // function getObject(object, flyingBlocksLayer) {
 
@@ -14,16 +15,7 @@ import { Mushroom } from "../gameobjects/Mushroom";
 //     }
 // }
 
-function getProperty(object, name) {
-    if (!object.properties) {
-        return
-    };
-    for (let i = 0; i < object.properties.length; ++i) {
-        if (object.properties[i].name === name) {
-            return object.properties[i].value
-        }
-    }
-}
+
 
 function setProperty(object, name, value) {
     if (!object.properties) {
@@ -86,7 +78,6 @@ export class MainScene extends Scene {
         let music = this.sound.add('soundtrack').setVolume(0.1);
         music.play({loop : -1});
         let mario_death = this.sound.add('death').setVolume(0.1);
-        let block_bump = this.sound.add('block-bump').setVolume(0.1);
         this.jump_sound = this.sound.add('jump-sound').setVolume(0.01);
 
         //console.log(spawnLayer, flyingBlocksLayer);
@@ -140,14 +131,7 @@ export class MainScene extends Scene {
 
         // TODO BLOCK: create a class for block. Also check the code just above.
         flyingBlocksLayer.objects.forEach(tile => {
-            if (tile.type == "mystery block") {
-                var mystery_block = this.matter.add.sprite(tile.x + 32, tile.y - 32, "block", 83, {label: 'movable', properties: tile.properties, ignoreGravity: true, isStatic: true}).setFixedRotation().setDepth(3);
-            }
-            else if (tile.type == "construct block") {
-                var construct_block = this.matter.add.sprite(tile.x + 32, tile.y - 32, "block", 35, {label: 'movable', ignoreGravity: true, isStatic: true}).setFixedRotation().setDepth(3);
-
-                //const mystery_block = map.createFromTiles(83, null, { useSpriteSheet: 'block' });
-            }
+            new Block(this, tile);
         });
 
         const playerSpawnPoint = map.findObject("spawn", obj => obj.name === "playerSpawn");
@@ -312,69 +296,7 @@ export class MainScene extends Scene {
 
         // Loop over the active colliding pairs and count the surfaces the player is touching.
 
-        this.matter.world.on('collisionstart', function (event)
-        {
-            //console.log("haha")
-            if (!this.playerController) {
-                //console.log("lol")
-                return
-            }
-            const playerBody = this.playerController.body;
-            const left = this.playerController.sensors.left;
-            const right = this.playerController.sensors.right;
-            const bottom = this.playerController.sensors.bottom;
-            const top = this.playerController.sensors.top;
-
-            for (let i = 0; i < event.pairs.length; i++)
-            {
-                const bodyA = event.pairs[i].bodyA;
-                const bodyB = event.pairs[i].bodyB;
-                var this_ = this;
-
-                if (bodyA === playerBody || bodyB === playerBody)
-                {
-                    continue;
-                }
-                // const collisionObject = this.getCollisionObject(bodyA, bodyB, 'powerup')
-                // if (collisionObject) {
-                //     console.log("will be destroyed ", collisionObject);
-                //     this.objects_to_destroy.push(collisionObject.gameObject);
-                // }
-                // TODO PLAYER: move this code to a function in the class, to interact with a block
-                if ((bodyA === top && bodyB.label === 'movable') || (bodyB === top && bodyA.label === 'movable'))
-                    {
-
-                        var tweenTarget = (bodyA.label === "movable" ? bodyA : bodyB);
-                        //let mystery_box = getObject(tweenTarget, flyingBlocksLayer);
-
-                        block_bump.play();
-                        tweenTarget.label = "moving";
-                        // https://labs.phaser.io/edit.html?src=src\tweens\chains\basic%20tween%20chain.js
-                        this.tweens.chain({
-                            targets: tweenTarget.gameObject,
-                            tweens: [
-                                {
-                                    y: tweenTarget.position.y - 24,
-                                    duration: 75
-                                },
-                                {
-                                    y: tweenTarget.position.y,
-                                    duration: 75
-                                }
-                            ],
-                            onComplete: () => {
-                                tweenTarget.label = "movable";
-                            }
-                        });
-
-                        // TODO BLOCK: getProperty should be in the class
-                        if (getProperty(tweenTarget, "bonus") == 'mushroom') {
-                            new Mushroom(this, tweenTarget.gameObject.x, tweenTarget.gameObject.y - 16);
-                            //setProperty(tweenTarget, 'bonus', 'none');
-                        }
-                    }
-            }
-        }, this)
+        
         // TODO PLAYER: a lot of code to move here
         this.matter.world.on('collisionactive', function (event)
         {

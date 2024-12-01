@@ -1,5 +1,3 @@
-import { GameObjects, Physics } from "phaser";
-
 export class Mushroom extends Phaser.Physics.Matter.Sprite {
     static defaultProperties = {
         friction: 0,
